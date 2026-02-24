@@ -123,6 +123,26 @@
     -fx-background-color: white;
 }
 
+/* ===== Sound Checkbox ===== */
+
+.sound-check {
+    -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-padding: 4 0 4 0;
+}
+
+.sound-check .box {
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 3;
+    -fx-background-color: white;
+    -fx-background-radius: 3;
+}
+
+.sound-check:selected .box {
+    -fx-background-color: black;
+    -fx-border-color: black;
+}
+
 /* ===== Slider ===== */
 
 .slider .track {
