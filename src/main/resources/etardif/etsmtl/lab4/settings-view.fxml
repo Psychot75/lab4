@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox alignment="CENTER" spacing="30" styleClass="page"
+      xmlns:fx="http://javafx.com/fxml">
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <Label text="Sorting Visualizer" styleClass="page-title"/>
+
+    <VBox spacing="14" maxWidth="360">
+        <Label text="Algorithm" styleClass="field-label"/>
+        <ComboBox fx:id="algorithmCombo" maxWidth="Infinity"/>
+
+        <Label text="Custom Series (comma-separated)" styleClass="field-label"/>
+        <TextArea fx:id="manualInput" promptText="e.g. 34, 7, 23, 91, 2, 56, 12"
+                  prefRowCount="2" wrapText="true" styleClass="manual-input"/>
+
+        <Label text="— or generate randomly —" styleClass="separator-label"
+               maxWidth="Infinity" alignment="CENTER"/>
+
+        <Label text="Array Size" styleClass="field-label"/>
+        <Spinner fx:id="sizeSpinner" maxWidth="Infinity" editable="true"/>
+
+        <Label text="Speed" styleClass="field-label"/>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Slider fx:id="speedSlider" min="1" max="100" value="70" HBox.hgrow="ALWAYS"/>
+            <Label fx:id="speedValueLabel" text="70" styleClass="speed-value"/>
+        </HBox>
+
+        <CheckBox fx:id="soundCheckBox" text="Enable Sound" selected="true"
+                  styleClass="sound-check"/>
+
+        <Button fx:id="startButton" text="Start Sorting" styleClass="primary-btn"
+                maxWidth="Infinity" onAction="#onStart"/>
+    </VBox>
+</VBox>

@@ -1,51 +1,72 @@
 package etardif.etsmtl.lab4;
 
-import etardif.etsmtl.lab4.sort.MergeSort;
-import etardif.etsmtl.lab4.sort.QuickSort;
-import etardif.etsmtl.lab4.sort.SortingAlgorithm;
+import etardif.etsmtl.lab4.sort.*;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class HelloApplication extends Application {
 
+    // Settings page controls (injected from settings-view.fxml)
+    @FXML private ComboBox<String> algorithmCombo;
+    @FXML private Spinner<Integer> sizeSpinner;
+    @FXML private Slider speedSlider;
+    @FXML private Label speedValueLabel;
+    @FXML private TextArea manualInput;
+    @FXML private CheckBox soundCheckBox;
+
+    // Visualization page controls (injected from visualization-view.fxml)
+    @FXML private Button backButton;
+    @FXML private HBox visualizerContainer;
+
     private StackPane root;
-    private VBox settingsPage;
-    private VBox visualizationPage;
+    private Parent settingsPage;
+    private Parent visualizationPage;
 
-    private ComboBox<String> algorithmCombo;
-    private Spinner<Integer> sizeSpinner;
-    private Slider speedSlider;
-    private TextArea manualInput;
-
-    private HBox visualizerContainer;
-    private SortingAlgorithm quickSort;
-    private SortingAlgorithm mergeSort;
-    private SortVisualizerPane quickSortPane;
-    private SortVisualizerPane mergeSortPane;
+    private final List<SortingAlgorithm> activeAlgorithms = new ArrayList<>();
     private int[] originalArray;
 
     private final AtomicInteger sortGeneration = new AtomicInteger(0);
     private final AtomicInteger completedCount = new AtomicInteger(0);
-    private Button backButton;
 
     @Override
-    public void start(Stage stage) {
-        buildSettingsPage();
-        buildVisualizationPage();
+    public void start(Stage stage) throws IOException {
+        FXMLLoader settingsLoader = new FXMLLoader(getClass().getResource("settings-view.fxml"));
+        settingsLoader.setController(this);
+        settingsPage = settingsLoader.load();
+
+        FXMLLoader vizLoader = new FXMLLoader(getClass().getResource("visualization-view.fxml"));
+        vizLoader.setController(this);
+        visualizationPage = vizLoader.load();
+
+        algorithmCombo.setItems(FXCollections.observableArrayList(
+                "Quick Sort", "Merge Sort", "Bucket Sort", "All"));
+        algorithmCombo.setValue("All");
+
+        sizeSpinner.setValueFactory(
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(5, Integer.MAX_VALUE, 50, 5));
+
+        speedSlider.valueProperty().addListener((obs, old, val) ->
+                speedValueLabel.setText(String.valueOf(val.intValue())));
 
         root = new StackPane(settingsPage);
 
-        Scene scene = new Scene(root, 900, 550);
+        Scene scene = new Scene(root, 900, 600);
         scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
 
         stage.setTitle("Sorting Visualizer");
@@ -55,122 +76,37 @@ public class HelloApplication extends Application {
         stage.show();
     }
 
-    private void buildSettingsPage() {
-        Label title = new Label("Sorting Visualizer");
-        title.getStyleClass().add("page-title");
-
-        Label algoLabel = new Label("Algorithm");
-        algoLabel.getStyleClass().add("field-label");
-        algorithmCombo = new ComboBox<>(FXCollections.observableArrayList(
-                "Quick Sort", "Merge Sort", "Both"));
-        algorithmCombo.setValue("Both");
-        algorithmCombo.setMaxWidth(Double.MAX_VALUE);
-
-        Label sizeLabel = new Label("Array Size");
-        sizeLabel.getStyleClass().add("field-label");
-        sizeSpinner = new Spinner<>(5, 200, 50, 5);
-        sizeSpinner.setEditable(true);
-        sizeSpinner.setMaxWidth(Double.MAX_VALUE);
-
-        Label manualLabel = new Label("Custom Series (comma-separated)");
-        manualLabel.getStyleClass().add("field-label");
-        manualInput = new TextArea();
-        manualInput.setPromptText("e.g. 34, 7, 23, 91, 2, 56, 12");
-        manualInput.setPrefRowCount(2);
-        manualInput.setWrapText(true);
-        manualInput.getStyleClass().add("manual-input");
-
-        Label orLabel = new Label("— or generate randomly —");
-        orLabel.getStyleClass().add("separator-label");
-        orLabel.setMaxWidth(Double.MAX_VALUE);
-        orLabel.setAlignment(Pos.CENTER);
-
-        Label speedLabel = new Label("Speed");
-        speedLabel.getStyleClass().add("field-label");
-        speedSlider = new Slider(1, 100, 70);
-        Label speedValue = new Label("70");
-        speedValue.getStyleClass().add("speed-value");
-        speedSlider.valueProperty().addListener((obs, old, val) ->
-                speedValue.setText(String.valueOf(val.intValue())));
-        HBox speedRow = new HBox(10, speedSlider, speedValue);
-        speedRow.setAlignment(Pos.CENTER_LEFT);
-        HBox.setHgrow(speedSlider, Priority.ALWAYS);
-
-        Button startButton = new Button("Start Sorting");
-        startButton.getStyleClass().add("primary-btn");
-        startButton.setMaxWidth(Double.MAX_VALUE);
-        startButton.setOnAction(e -> goToVisualization());
-
-        VBox form = new VBox(14,
-                algoLabel, algorithmCombo,
-                manualLabel, manualInput,
-                orLabel,
-                sizeLabel, sizeSpinner,
-                speedLabel, speedRow,
-                startButton);
-        form.setMaxWidth(360);
-
-        settingsPage = new VBox(30, title, form);
-        settingsPage.setAlignment(Pos.CENTER);
-        settingsPage.setPadding(new Insets(40));
-        settingsPage.getStyleClass().add("page");
-    }
-
-    private void buildVisualizationPage() {
-        backButton = new Button("Back to Settings");
-        backButton.getStyleClass().add("back-btn");
-        backButton.setOnAction(e -> goToSettings());
-
-        HBox topBar = new HBox(backButton);
-        topBar.setAlignment(Pos.CENTER_LEFT);
-
-        visualizerContainer = new HBox(16);
-        visualizerContainer.setAlignment(Pos.CENTER);
-        VBox.setVgrow(visualizerContainer, Priority.ALWAYS);
-
-        visualizationPage = new VBox(12, topBar, visualizerContainer);
-        visualizationPage.setPadding(new Insets(20));
-        visualizationPage.getStyleClass().add("page");
-    }
-
-    private void goToVisualization() {
+    @FXML
+    private void onStart() {
         if (!parseManualInput()) {
-            int size = sizeSpinner.getValue();
-            generateArray(size);
+            generateArray(sizeSpinner.getValue());
         }
 
         String choice = algorithmCombo.getValue();
         visualizerContainer.getChildren().clear();
+        activeAlgorithms.clear();
 
-        quickSort = new QuickSort();
-        mergeSort = new MergeSort();
+        if ("Quick Sort".equals(choice) || "All".equals(choice)) {
+            activeAlgorithms.add(new QuickSort());
+        }
+        if ("Merge Sort".equals(choice) || "All".equals(choice)) {
+            activeAlgorithms.add(new MergeSort());
+        }
+        if ("Bucket Sort".equals(choice) || "All".equals(choice)) {
+            activeAlgorithms.add(new BucketSort());
+        }
+
         long delay = Math.max(5, (long) (101 - speedSlider.getValue()));
-        quickSort.setDelay(delay);
-        mergeSort.setDelay(delay);
+        boolean soundEnabled = soundCheckBox.isSelected();
+        ToneGenerator sharedTone = soundEnabled ? new ToneGenerator() : null;
 
-        int expectedCompletions;
-
-        if ("Quick Sort".equals(choice)) {
-            quickSortPane = new SortVisualizerPane(quickSort);
-            HBox.setHgrow(quickSortPane, Priority.ALWAYS);
-            visualizerContainer.getChildren().add(quickSortPane);
-            quickSortPane.setData(originalArray.clone());
-            expectedCompletions = 1;
-        } else if ("Merge Sort".equals(choice)) {
-            mergeSortPane = new SortVisualizerPane(mergeSort);
-            HBox.setHgrow(mergeSortPane, Priority.ALWAYS);
-            visualizerContainer.getChildren().add(mergeSortPane);
-            mergeSortPane.setData(originalArray.clone());
-            expectedCompletions = 1;
-        } else {
-            quickSortPane = new SortVisualizerPane(quickSort);
-            mergeSortPane = new SortVisualizerPane(mergeSort);
-            HBox.setHgrow(quickSortPane, Priority.ALWAYS);
-            HBox.setHgrow(mergeSortPane, Priority.ALWAYS);
-            visualizerContainer.getChildren().addAll(quickSortPane, mergeSortPane);
-            quickSortPane.setData(originalArray.clone());
-            mergeSortPane.setData(originalArray.clone());
-            expectedCompletions = 2;
+        for (SortingAlgorithm algo : activeAlgorithms) {
+            algo.setDelay(delay);
+            SortVisualizerPane pane = new SortVisualizerPane(algo);
+            pane.setToneGenerator(sharedTone);
+            HBox.setHgrow(pane, Priority.ALWAYS);
+            visualizerContainer.getChildren().add(pane);
+            pane.setData(originalArray.clone());
         }
 
         root.getChildren().setAll(visualizationPage);
@@ -178,34 +114,30 @@ public class HelloApplication extends Application {
 
         int gen = sortGeneration.incrementAndGet();
         completedCount.set(0);
+        int expected = activeAlgorithms.size();
 
-        if ("Quick Sort".equals(choice) || "Both".equals(choice)) {
-            startSortThread(quickSort, gen, expectedCompletions);
-        }
-        if ("Merge Sort".equals(choice) || "Both".equals(choice)) {
-            startSortThread(mergeSort, gen, expectedCompletions);
+        for (SortingAlgorithm algo : activeAlgorithms) {
+            int[] data = originalArray.clone();
+            Thread t = new Thread(() -> {
+                try {
+                    algo.sort(data);
+                } catch (RuntimeException e) {
+                    // cancelled
+                }
+                if (gen == sortGeneration.get() && completedCount.incrementAndGet() >= expected) {
+                    Platform.runLater(() -> backButton.setDisable(false));
+                }
+            });
+            t.setDaemon(true);
+            t.start();
         }
     }
 
-    private void startSortThread(SortingAlgorithm algo, int gen, int expected) {
-        int[] data = originalArray.clone();
-        Thread t = new Thread(() -> {
-            try {
-                algo.sort(data);
-            } catch (RuntimeException e) {
-                // cancelled
-            }
-            if (gen == sortGeneration.get() && completedCount.incrementAndGet() >= expected) {
-                Platform.runLater(() -> backButton.setDisable(false));
-            }
-        });
-        t.setDaemon(true);
-        t.start();
-    }
-
-    private void goToSettings() {
-        if (quickSort != null) quickSort.cancel();
-        if (mergeSort != null) mergeSort.cancel();
+    @FXML
+    private void onBack() {
+        for (SortingAlgorithm algo : activeAlgorithms) {
+            algo.cancel();
+        }
         sortGeneration.incrementAndGet();
         root.getChildren().setAll(settingsPage);
     }
@@ -215,7 +147,7 @@ public class HelloApplication extends Application {
         if (text == null || text.trim().isEmpty()) return false;
         try {
             String[] parts = text.split("[,\\s]+");
-            java.util.List<Integer> nums = new java.util.ArrayList<>();
+            List<Integer> nums = new ArrayList<>();
             for (String p : parts) {
                 String trimmed = p.trim();
                 if (!trimmed.isEmpty()) nums.add(Integer.parseInt(trimmed));

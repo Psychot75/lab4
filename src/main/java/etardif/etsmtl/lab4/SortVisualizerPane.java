@@ -31,6 +31,7 @@ public class SortVisualizerPane extends VBox {
     private int[] data;
     private int[] highlightedIndices = new int[0];
     private boolean sortComplete = false;
+    private ToneGenerator toneGenerator;
 
     public SortVisualizerPane(SortingAlgorithm algorithm) {
         this.algorithm = algorithm;
@@ -56,12 +57,27 @@ public class SortVisualizerPane extends VBox {
         setupObserver();
     }
 
+    public void setToneGenerator(ToneGenerator toneGenerator) {
+        this.toneGenerator = toneGenerator;
+    }
+
     private void setupObserver() {
         observer = new Observer() {
             @Override
             public void update(Observable o) {
                 SortingAlgorithm algo = (SortingAlgorithm) o;
                 SortStep step = algo.getCurrentStep();
+
+                // Play tone from the sort thread (low latency)
+                if (toneGenerator != null && !step.isSortComplete()) {
+                    int[] state = step.getArrayState();
+                    int[] indices = step.getHighlightedIndices();
+                    if (indices.length > 0 && state != null) {
+                        int maxVal = Arrays.stream(state).max().orElse(1);
+                        toneGenerator.play(state[indices[0]], maxVal);
+                    }
+                }
+
                 Platform.runLater(() -> {
                     data = step.getArrayState();
                     highlightedIndices = step.getHighlightedIndices();
