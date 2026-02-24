@@ -25,6 +25,7 @@ public class HelloApplication extends Application {
     private ComboBox<String> algorithmCombo;
     private Spinner<Integer> sizeSpinner;
     private Slider speedSlider;
+    private TextArea manualInput;
 
     private HBox visualizerContainer;
     private SortingAlgorithm quickSort;
@@ -71,6 +72,19 @@ public class HelloApplication extends Application {
         sizeSpinner.setEditable(true);
         sizeSpinner.setMaxWidth(Double.MAX_VALUE);
 
+        Label manualLabel = new Label("Custom Series (comma-separated)");
+        manualLabel.getStyleClass().add("field-label");
+        manualInput = new TextArea();
+        manualInput.setPromptText("e.g. 34, 7, 23, 91, 2, 56, 12");
+        manualInput.setPrefRowCount(2);
+        manualInput.setWrapText(true);
+        manualInput.getStyleClass().add("manual-input");
+
+        Label orLabel = new Label("— or generate randomly —");
+        orLabel.getStyleClass().add("separator-label");
+        orLabel.setMaxWidth(Double.MAX_VALUE);
+        orLabel.setAlignment(Pos.CENTER);
+
         Label speedLabel = new Label("Speed");
         speedLabel.getStyleClass().add("field-label");
         speedSlider = new Slider(1, 100, 70);
@@ -89,10 +103,12 @@ public class HelloApplication extends Application {
 
         VBox form = new VBox(14,
                 algoLabel, algorithmCombo,
+                manualLabel, manualInput,
+                orLabel,
                 sizeLabel, sizeSpinner,
                 speedLabel, speedRow,
                 startButton);
-        form.setMaxWidth(320);
+        form.setMaxWidth(360);
 
         settingsPage = new VBox(30, title, form);
         settingsPage.setAlignment(Pos.CENTER);
@@ -118,8 +134,10 @@ public class HelloApplication extends Application {
     }
 
     private void goToVisualization() {
-        int size = sizeSpinner.getValue();
-        generateArray(size);
+        if (!parseManualInput()) {
+            int size = sizeSpinner.getValue();
+            generateArray(size);
+        }
 
         String choice = algorithmCombo.getValue();
         visualizerContainer.getChildren().clear();
@@ -190,6 +208,24 @@ public class HelloApplication extends Application {
         if (mergeSort != null) mergeSort.cancel();
         sortGeneration.incrementAndGet();
         root.getChildren().setAll(settingsPage);
+    }
+
+    private boolean parseManualInput() {
+        String text = manualInput.getText();
+        if (text == null || text.trim().isEmpty()) return false;
+        try {
+            String[] parts = text.split("[,\\s]+");
+            java.util.List<Integer> nums = new java.util.ArrayList<>();
+            for (String p : parts) {
+                String trimmed = p.trim();
+                if (!trimmed.isEmpty()) nums.add(Integer.parseInt(trimmed));
+            }
+            if (nums.isEmpty()) return false;
+            originalArray = nums.stream().mapToInt(Integer::intValue).toArray();
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private void generateArray(int size) {

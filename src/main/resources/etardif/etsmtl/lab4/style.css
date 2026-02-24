@@ -32,6 +32,29 @@
     -fx-background-radius: 4;
 }
 
+.manual-input {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 13px;
+    -fx-padding: 6;
+}
+
+.manual-input .content {
+    -fx-background-color: white;
+}
+
+.manual-input:focused {
+    -fx-border-color: #666666;
+}
+
+.separator-label {
+    -fx-text-fill: #999999;
+    -fx-font-size: 12px;
+    -fx-padding: 4 0 0 0;
+}
+
 .speed-value {
     -fx-text-fill: #333333;
     -fx-font-size: 13px;
