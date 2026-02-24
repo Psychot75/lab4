@@ -13,15 +13,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 public class SortVisualizerPane extends VBox {
+
+    private static final Color BAR_COLOR = Color.web("#3b82f6");
+    private static final Color HIGHLIGHT_COLOR = Color.web("#ef4444");
+    private static final Color COMPLETE_COLOR = Color.web("#22c55e");
 
     private final Canvas canvas;
     private final Label titleLabel;
@@ -96,7 +97,8 @@ public class SortVisualizerPane extends VBox {
         double h = canvas.getHeight();
         if (w <= 0 || h <= 0) return;
 
-        gc.clearRect(0, 0, w, h);
+        gc.setFill(Color.WHITE);
+        gc.fillRect(0, 0, w, h);
 
         int n = data.length;
         double barWidth = w / n;
@@ -105,37 +107,21 @@ public class SortVisualizerPane extends VBox {
         Set<Integer> highlighted = new HashSet<>();
         for (int idx : highlightedIndices) highlighted.add(idx);
 
-        LinearGradient normalGradient = new LinearGradient(
-                0, 0, 0, h, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#4facfe")),
-                new Stop(1, Color.web("#0078d4"))
-        );
-        LinearGradient highlightGradient = new LinearGradient(
-                0, 0, 0, h, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#ff6b6b")),
-                new Stop(1, Color.web("#ee5a24"))
-        );
-        LinearGradient completeGradient = new LinearGradient(
-                0, 0, 0, h, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#00e676")),
-                new Stop(1, Color.web("#00c853"))
-        );
-
         for (int i = 0; i < n; i++) {
-            double barHeight = (data[i] / (double) maxVal) * (h - 5);
+            double barHeight = (data[i] / (double) maxVal) * (h - 4);
             double x = i * barWidth;
             double y = h - barHeight;
 
             if (sortComplete) {
-                gc.setFill(completeGradient);
+                gc.setFill(COMPLETE_COLOR);
             } else if (highlighted.contains(i)) {
-                gc.setFill(highlightGradient);
+                gc.setFill(HIGHLIGHT_COLOR);
             } else {
-                gc.setFill(normalGradient);
+                gc.setFill(BAR_COLOR);
             }
 
-            double gap = Math.max(1, barWidth * 0.15);
-            gc.fillRoundRect(x + gap / 2, y, Math.max(barWidth - gap, 1), barHeight, 3, 3);
+            double gap = Math.max(1, barWidth * 0.12);
+            gc.fillRect(x + gap / 2, y, Math.max(barWidth - gap, 1), barHeight);
         }
     }
 }

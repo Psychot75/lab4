@@ -1,120 +1,116 @@
-/* ===== Dark Theme - Sorting Visualizer ===== */
+/* ===== Base ===== */
 
-.main-root {
-    -fx-background-color: #0f0f23;
+.page {
+    -fx-background-color: white;
 }
 
-/* ===== Title ===== */
+/* ===== Settings Page ===== */
 
-.title {
-    -fx-text-fill: #e0e0ff;
-    -fx-font-size: 26px;
+.page-title {
+    -fx-text-fill: black;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
-    -fx-padding: 5 0 5 0;
 }
 
-/* ===== Visualizer Panels ===== */
+.field-label {
+    -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 6;
+}
+
+.spinner {
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.speed-value {
+    -fx-text-fill: #333333;
+    -fx-font-size: 13px;
+    -fx-min-width: 28;
+}
+
+.primary-btn {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 0 10 0;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.primary-btn:hover {
+    -fx-background-color: #222222;
+}
+
+.primary-btn:pressed {
+    -fx-background-color: #444444;
+}
+
+/* ===== Visualization Page ===== */
+
+.back-btn {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+    -fx-font-size: 13px;
+    -fx-padding: 6 14 6 14;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-cursor: hand;
+}
+
+.back-btn:hover {
+    -fx-background-color: #f5f5f5;
+}
+
+.back-btn:disabled {
+    -fx-text-fill: #aaaaaa;
+    -fx-border-color: #e0e0e0;
+    -fx-opacity: 0.7;
+}
+
+/* ===== Visualizer Pane ===== */
 
 .visualizer-pane {
-    -fx-background-color: #16213e;
-    -fx-background-radius: 12;
-    -fx-padding: 15;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 18, 0, 0, 6);
+    -fx-background-color: white;
+    -fx-padding: 10;
+    -fx-border-color: #e0e0e0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
 }
 
 .visualizer-title {
-    -fx-text-fill: #8888bb;
-    -fx-font-size: 15px;
+    -fx-text-fill: black;
+    -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-padding: 0 0 10 0;
+    -fx-padding: 0 0 8 0;
 }
 
 .canvas-holder {
-    -fx-background-color: #0d1a30;
-    -fx-background-radius: 8;
+    -fx-background-color: white;
 }
 
-/* ===== Controls Bar ===== */
-
-.controls-bar {
-    -fx-padding: 10 0 0 0;
-}
-
-.control-label {
-    -fx-text-fill: #8888bb;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-}
-
-/* ===== Start Button ===== */
-
-.start-btn {
-    -fx-background-color: linear-gradient(to bottom, #4facfe, #2d8fe0);
-    -fx-text-fill: white;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-padding: 9 28 9 28;
-    -fx-background-radius: 8;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(79, 172, 254, 0.3), 8, 0, 0, 2);
-}
-
-.start-btn:hover {
-    -fx-background-color: linear-gradient(to bottom, #5fb8ff, #3a9aef);
-}
-
-.start-btn:pressed {
-    -fx-background-color: linear-gradient(to bottom, #3a9aef, #2278c5);
-}
-
-.start-btn:disabled {
-    -fx-background-color: #2a3a5e;
-    -fx-text-fill: #556688;
-    -fx-opacity: 0.8;
-    -fx-effect: none;
-}
-
-/* ===== Reset Button ===== */
-
-.reset-btn {
-    -fx-background-color: transparent;
-    -fx-text-fill: #8888bb;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-padding: 9 28 9 28;
-    -fx-background-radius: 8;
-    -fx-border-color: #335588;
-    -fx-border-radius: 8;
-    -fx-border-width: 2;
-    -fx-cursor: hand;
-}
-
-.reset-btn:hover {
-    -fx-background-color: rgba(79, 172, 254, 0.08);
-    -fx-border-color: #4facfe;
-    -fx-text-fill: #b0b0dd;
-}
-
-.reset-btn:pressed {
-    -fx-background-color: rgba(79, 172, 254, 0.15);
-}
-
-/* ===== Speed Slider ===== */
+/* ===== Slider ===== */
 
 .slider .track {
-    -fx-background-color: #0f3460;
-    -fx-pref-height: 4;
+    -fx-background-color: #dddddd;
+    -fx-pref-height: 3;
     -fx-background-radius: 2;
 }
 
 .slider .thumb {
-    -fx-background-color: #4facfe;
-    -fx-background-radius: 10;
-    -fx-pref-width: 16;
-    -fx-pref-height: 16;
-    -fx-effect: dropshadow(gaussian, rgba(79, 172, 254, 0.4), 6, 0, 0, 0);
-}
-
-.slider .thumb:hover {
-    -fx-background-color: #6dc0ff;
+    -fx-background-color: black;
+    -fx-background-radius: 8;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
 }

@@ -5,15 +5,12 @@ import etardif.etsmtl.lab4.sort.QuickSort;
 import etardif.etsmtl.lab4.sort.SortingAlgorithm;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.util.Random;
@@ -21,149 +18,185 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class HelloApplication extends Application {
 
-    private SortingAlgorithm quickSort = new QuickSort();
-    private SortingAlgorithm mergeSort = new MergeSort();
+    private StackPane root;
+    private VBox settingsPage;
+    private VBox visualizationPage;
+
+    private ComboBox<String> algorithmCombo;
+    private Spinner<Integer> sizeSpinner;
+    private Slider speedSlider;
+
+    private HBox visualizerContainer;
+    private SortingAlgorithm quickSort;
+    private SortingAlgorithm mergeSort;
     private SortVisualizerPane quickSortPane;
     private SortVisualizerPane mergeSortPane;
     private int[] originalArray;
-    private int arraySize = 50;
-
-    private Button startButton;
-    private Button resetButton;
-    private Slider speedSlider;
 
     private final AtomicInteger sortGeneration = new AtomicInteger(0);
     private final AtomicInteger completedCount = new AtomicInteger(0);
+    private Button backButton;
 
     @Override
     public void start(Stage stage) {
-        generateArray();
+        buildSettingsPage();
+        buildVisualizationPage();
 
-        quickSortPane = new SortVisualizerPane(quickSort);
-        mergeSortPane = new SortVisualizerPane(mergeSort);
+        root = new StackPane(settingsPage);
 
-        // Title
-        Label title = new Label("Sorting Visualizer");
-        title.getStyleClass().add("title");
-        title.setMaxWidth(Double.MAX_VALUE);
-        title.setAlignment(Pos.CENTER);
-
-        // Visualizer area
-        HBox visualizers = new HBox(20, quickSortPane, mergeSortPane);
-        visualizers.setAlignment(Pos.CENTER);
-        HBox.setHgrow(quickSortPane, Priority.ALWAYS);
-        HBox.setHgrow(mergeSortPane, Priority.ALWAYS);
-        VBox.setVgrow(visualizers, Priority.ALWAYS);
-
-        // Controls
-        startButton = new Button("Start");
-        startButton.getStyleClass().add("start-btn");
-        startButton.setOnAction(e -> startSort());
-
-        resetButton = new Button("Reset");
-        resetButton.getStyleClass().add("reset-btn");
-        resetButton.setOnAction(e -> resetSort());
-
-        Label speedLabel = new Label("Speed");
-        speedLabel.getStyleClass().add("control-label");
-
-        speedSlider = new Slider(1, 100, 70);
-        speedSlider.setPrefWidth(180);
-        speedSlider.valueProperty().addListener((obs, old, val) -> updateDelay());
-
-        HBox controls = new HBox(18, startButton, resetButton, speedLabel, speedSlider);
-        controls.setAlignment(Pos.CENTER);
-        controls.setPadding(new Insets(12, 0, 0, 0));
-        controls.getStyleClass().add("controls-bar");
-
-        VBox root = new VBox(15, title, visualizers, controls);
-        root.setPadding(new Insets(20));
-        root.getStyleClass().add("main-root");
-
-        Scene scene = new Scene(root, 1000, 600);
+        Scene scene = new Scene(root, 900, 550);
         scene.getStylesheets().add(getClass().getResource("style.css").toExternalForm());
 
         stage.setTitle("Sorting Visualizer");
         stage.setScene(scene);
-        stage.setMinWidth(700);
-        stage.setMinHeight(450);
+        stage.setMinWidth(600);
+        stage.setMinHeight(400);
         stage.show();
-
-        quickSortPane.setData(originalArray.clone());
-        mergeSortPane.setData(originalArray.clone());
-        updateDelay();
     }
 
-    private void generateArray() {
-        Random rand = new Random();
-        originalArray = new int[arraySize];
-        for (int i = 0; i < arraySize; i++) {
-            originalArray[i] = rand.nextInt(100) + 1;
-        }
+    private void buildSettingsPage() {
+        Label title = new Label("Sorting Visualizer");
+        title.getStyleClass().add("page-title");
+
+        Label algoLabel = new Label("Algorithm");
+        algoLabel.getStyleClass().add("field-label");
+        algorithmCombo = new ComboBox<>(FXCollections.observableArrayList(
+                "Quick Sort", "Merge Sort", "Both"));
+        algorithmCombo.setValue("Both");
+        algorithmCombo.setMaxWidth(Double.MAX_VALUE);
+
+        Label sizeLabel = new Label("Array Size");
+        sizeLabel.getStyleClass().add("field-label");
+        sizeSpinner = new Spinner<>(5, 200, 50, 5);
+        sizeSpinner.setEditable(true);
+        sizeSpinner.setMaxWidth(Double.MAX_VALUE);
+
+        Label speedLabel = new Label("Speed");
+        speedLabel.getStyleClass().add("field-label");
+        speedSlider = new Slider(1, 100, 70);
+        Label speedValue = new Label("70");
+        speedValue.getStyleClass().add("speed-value");
+        speedSlider.valueProperty().addListener((obs, old, val) ->
+                speedValue.setText(String.valueOf(val.intValue())));
+        HBox speedRow = new HBox(10, speedSlider, speedValue);
+        speedRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(speedSlider, Priority.ALWAYS);
+
+        Button startButton = new Button("Start Sorting");
+        startButton.getStyleClass().add("primary-btn");
+        startButton.setMaxWidth(Double.MAX_VALUE);
+        startButton.setOnAction(e -> goToVisualization());
+
+        VBox form = new VBox(14,
+                algoLabel, algorithmCombo,
+                sizeLabel, sizeSpinner,
+                speedLabel, speedRow,
+                startButton);
+        form.setMaxWidth(320);
+
+        settingsPage = new VBox(30, title, form);
+        settingsPage.setAlignment(Pos.CENTER);
+        settingsPage.setPadding(new Insets(40));
+        settingsPage.getStyleClass().add("page");
     }
 
-    private void updateDelay() {
+    private void buildVisualizationPage() {
+        backButton = new Button("Back to Settings");
+        backButton.getStyleClass().add("back-btn");
+        backButton.setOnAction(e -> goToSettings());
+
+        HBox topBar = new HBox(backButton);
+        topBar.setAlignment(Pos.CENTER_LEFT);
+
+        visualizerContainer = new HBox(16);
+        visualizerContainer.setAlignment(Pos.CENTER);
+        VBox.setVgrow(visualizerContainer, Priority.ALWAYS);
+
+        visualizationPage = new VBox(12, topBar, visualizerContainer);
+        visualizationPage.setPadding(new Insets(20));
+        visualizationPage.getStyleClass().add("page");
+    }
+
+    private void goToVisualization() {
+        int size = sizeSpinner.getValue();
+        generateArray(size);
+
+        String choice = algorithmCombo.getValue();
+        visualizerContainer.getChildren().clear();
+
+        quickSort = new QuickSort();
+        mergeSort = new MergeSort();
         long delay = Math.max(5, (long) (101 - speedSlider.getValue()));
         quickSort.setDelay(delay);
         mergeSort.setDelay(delay);
-    }
 
-    private void startSort() {
-        startButton.setDisable(true);
+        int expectedCompletions;
+
+        if ("Quick Sort".equals(choice)) {
+            quickSortPane = new SortVisualizerPane(quickSort);
+            HBox.setHgrow(quickSortPane, Priority.ALWAYS);
+            visualizerContainer.getChildren().add(quickSortPane);
+            quickSortPane.setData(originalArray.clone());
+            expectedCompletions = 1;
+        } else if ("Merge Sort".equals(choice)) {
+            mergeSortPane = new SortVisualizerPane(mergeSort);
+            HBox.setHgrow(mergeSortPane, Priority.ALWAYS);
+            visualizerContainer.getChildren().add(mergeSortPane);
+            mergeSortPane.setData(originalArray.clone());
+            expectedCompletions = 1;
+        } else {
+            quickSortPane = new SortVisualizerPane(quickSort);
+            mergeSortPane = new SortVisualizerPane(mergeSort);
+            HBox.setHgrow(quickSortPane, Priority.ALWAYS);
+            HBox.setHgrow(mergeSortPane, Priority.ALWAYS);
+            visualizerContainer.getChildren().addAll(quickSortPane, mergeSortPane);
+            quickSortPane.setData(originalArray.clone());
+            mergeSortPane.setData(originalArray.clone());
+            expectedCompletions = 2;
+        }
+
+        root.getChildren().setAll(visualizationPage);
+        backButton.setDisable(true);
+
         int gen = sortGeneration.incrementAndGet();
         completedCount.set(0);
-        updateDelay();
 
-        int[] data1 = originalArray.clone();
-        int[] data2 = originalArray.clone();
-
-        Thread t1 = new Thread(() -> {
-            try {
-                quickSort.sort(data1);
-            } catch (RuntimeException e) {
-                // Sort was cancelled
-            }
-            onSortComplete(gen);
-        });
-
-        Thread t2 = new Thread(() -> {
-            try {
-                mergeSort.sort(data2);
-            } catch (RuntimeException e) {
-                // Sort was cancelled
-            }
-            onSortComplete(gen);
-        });
-
-        t1.setDaemon(true);
-        t2.setDaemon(true);
-        t1.start();
-        t2.start();
-    }
-
-    private void onSortComplete(int generation) {
-        if (generation != sortGeneration.get()) return;
-        if (completedCount.incrementAndGet() >= 2) {
-            Platform.runLater(() -> startButton.setDisable(false));
+        if ("Quick Sort".equals(choice) || "Both".equals(choice)) {
+            startSortThread(quickSort, gen, expectedCompletions);
+        }
+        if ("Merge Sort".equals(choice) || "Both".equals(choice)) {
+            startSortThread(mergeSort, gen, expectedCompletions);
         }
     }
 
-    private void resetSort() {
-        quickSort.cancel();
-        mergeSort.cancel();
+    private void startSortThread(SortingAlgorithm algo, int gen, int expected) {
+        int[] data = originalArray.clone();
+        Thread t = new Thread(() -> {
+            try {
+                algo.sort(data);
+            } catch (RuntimeException e) {
+                // cancelled
+            }
+            if (gen == sortGeneration.get() && completedCount.incrementAndGet() >= expected) {
+                Platform.runLater(() -> backButton.setDisable(false));
+            }
+        });
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private void goToSettings() {
+        if (quickSort != null) quickSort.cancel();
+        if (mergeSort != null) mergeSort.cancel();
         sortGeneration.incrementAndGet();
+        root.getChildren().setAll(settingsPage);
+    }
 
-        generateArray();
-        quickSort = new QuickSort();
-        mergeSort = new MergeSort();
-        updateDelay();
-
-        quickSortPane.setAlgorithm(quickSort);
-        mergeSortPane.setAlgorithm(mergeSort);
-        quickSortPane.setData(originalArray.clone());
-        mergeSortPane.setData(originalArray.clone());
-
-        startButton.setDisable(false);
-        completedCount.set(0);
+    private void generateArray(int size) {
+        Random rand = new Random();
+        originalArray = new int[size];
+        for (int i = 0; i < size; i++) {
+            originalArray[i] = rand.nextInt(100) + 1;
+        }
     }
 }
