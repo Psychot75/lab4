@@ -15,6 +15,7 @@ public class ToneGenerator {
 
     private SourceDataLine line;
     private boolean enabled = true;
+    private volatile double volume = 1.0;
 
     public ToneGenerator() {
         try {
@@ -30,6 +31,11 @@ public class ToneGenerator {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    /** Set volume from 0.0 (silent) to 1.0 (full). */
+    public void setVolume(double volume) {
+        this.volume = Math.max(0.0, Math.min(1.0, volume));
     }
 
     /**
@@ -51,7 +57,7 @@ public class ToneGenerator {
             int fadeLen = samples / 5;
             if (i < fadeLen) envelope = (double) i / fadeLen;
             else if (i > samples - fadeLen) envelope = (double) (samples - i) / fadeLen;
-            buf[i] = (byte) (Math.sin(angle) * 80 * envelope);
+            buf[i] = (byte) (Math.sin(angle) * 80 * envelope * volume);
         }
 
         line.write(buf, 0, buf.length);

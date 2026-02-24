@@ -32,6 +32,8 @@ public class HelloApplication extends Application {
 
     // Visualization page controls (injected from visualization-view.fxml)
     @FXML private Button backButton;
+    @FXML private Button playPauseButton;
+    @FXML private Slider volumeSlider;
     @FXML private HBox visualizerContainer;
 
     private StackPane root;
@@ -39,6 +41,7 @@ public class HelloApplication extends Application {
     private Parent visualizationPage;
 
     private final List<SortingAlgorithm> activeAlgorithms = new ArrayList<>();
+    private ToneGenerator activeTone;
     private int[] originalArray;
 
     private final AtomicInteger sortGeneration = new AtomicInteger(0);
@@ -63,6 +66,12 @@ public class HelloApplication extends Application {
 
         speedSlider.valueProperty().addListener((obs, old, val) ->
                 speedValueLabel.setText(String.valueOf(val.intValue())));
+
+        volumeSlider.valueProperty().addListener((obs, old, val) -> {
+            if (activeTone != null) {
+                activeTone.setVolume(val.doubleValue() / 100.0);
+            }
+        });
 
         root = new StackPane(settingsPage);
 
@@ -98,7 +107,11 @@ public class HelloApplication extends Application {
 
         long delay = Math.max(5, (long) (101 - speedSlider.getValue()));
         boolean soundEnabled = soundCheckBox.isSelected();
-        ToneGenerator sharedTone = soundEnabled ? new ToneGenerator() : null;
+        activeTone = soundEnabled ? new ToneGenerator() : null;
+        if (activeTone != null) {
+            activeTone.setVolume(volumeSlider.getValue() / 100.0);
+        }
+        ToneGenerator sharedTone = activeTone;
 
         for (SortingAlgorithm algo : activeAlgorithms) {
             algo.setDelay(delay);
@@ -111,6 +124,7 @@ public class HelloApplication extends Application {
 
         root.getChildren().setAll(visualizationPage);
         backButton.setDisable(true);
+        playPauseButton.setText("Pause");
 
         int gen = sortGeneration.incrementAndGet();
         completedCount.set(0);
@@ -134,11 +148,28 @@ public class HelloApplication extends Application {
     }
 
     @FXML
+    private void onPlayPause() {
+        if (activeAlgorithms.isEmpty()) return;
+        boolean anyPaused = activeAlgorithms.stream().anyMatch(SortingAlgorithm::isPaused);
+        if (anyPaused) {
+            activeAlgorithms.forEach(SortingAlgorithm::resume);
+            playPauseButton.setText("Pause");
+        } else {
+            activeAlgorithms.forEach(SortingAlgorithm::pause);
+            playPauseButton.setText("Play");
+        }
+    }
+
+    @FXML
     private void onBack() {
         for (SortingAlgorithm algo : activeAlgorithms) {
             algo.cancel();
         }
         sortGeneration.incrementAndGet();
+        if (activeTone != null) {
+            activeTone.close();
+            activeTone = null;
+        }
         root.getChildren().setAll(settingsPage);
     }
 
