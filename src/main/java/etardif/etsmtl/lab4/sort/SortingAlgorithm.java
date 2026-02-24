@@ -9,6 +9,7 @@ public abstract class SortingAlgorithm extends Observable {
     private boolean sortComplete = false;
     private volatile long delayMs = 30;
     private volatile boolean cancelled = false;
+    private volatile boolean paused = false;
 
     public final void sort(int[] data) {
         this.array = data.clone();
@@ -39,10 +40,32 @@ public abstract class SortingAlgorithm extends Observable {
 
     public void cancel() {
         this.cancelled = true;
+        this.paused = false; // unblock if paused
+    }
+
+    public void pause() {
+        this.paused = true;
+    }
+
+    public void resume() {
+        this.paused = false;
+    }
+
+    public boolean isPaused() {
+        return paused;
     }
 
     @Override
     protected void notifyObservers() {
+        if (cancelled) throw new RuntimeException("Sort cancelled");
+        // Spin-wait while paused
+        while (paused && !cancelled) {
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
         if (cancelled) throw new RuntimeException("Sort cancelled");
         super.notifyObservers();
         if (delayMs > 0) {
